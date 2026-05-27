@@ -7,19 +7,21 @@
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --purple:       #7c3aed;
-      --purple-dark:  #5b21b6;
-      --purple-light: #a78bfa;
-      --purple-pale:  #ede9fe;
-      --black:        #0d0d0f;
-      --dark:         #13111a;
-      --dark2:        #1c1829;
-      --dark3:        #241f35;
+      --purple:       #9333ea;
+      --purple-dark:  #7e22ce;
+      --purple-light: #c084fc;
+      --purple-pale:  #f3e8ff;
+      --lilac:        #d8b4fe;
+      --lilac-soft:   #e9d5ff;
+      --black:        #0f0a1e;
+      --dark:         #160d2b;
+      --dark2:        #1e1038;
+      --dark3:        #2a1650;
       --white:        #ffffff;
-      --text:         #e8e3f5;
-      --muted:        #7c6fa0;
-      --border:       rgba(124,58,237,.18);
-      --shadow:       0 4px 32px rgba(124,58,237,.15);
+      --text:         #ede9fe;
+      --muted:        #a78bfa;
+      --border:       rgba(192,132,252,.22);
+      --shadow:       0 4px 32px rgba(147,51,234,.2);
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -36,8 +38,9 @@
       content: '';
       position: fixed; inset: 0; z-index: -1;
       background:
-        radial-gradient(ellipse 55% 40% at 90% 5%, rgba(124,58,237,.14) 0%, transparent 70%),
-        radial-gradient(ellipse 40% 50% at 5% 95%, rgba(124,58,237,.08) 0%, transparent 70%),
+        radial-gradient(ellipse 55% 40% at 90% 5%, rgba(192,132,252,.22) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 50% at 5% 95%, rgba(147,51,234,.14) 0%, transparent 70%),
+        radial-gradient(ellipse 30% 30% at 50% 50%, rgba(216,180,254,.05) 0%, transparent 70%),
         var(--black);
     }
 
@@ -412,10 +415,14 @@
 
   async function req(path, method='GET', body=null) {
     const headers = { 'Content-Type': 'application/json', 'X-API-Version': '1' };
-    if (apiKey()) headers['X-API-Key'] = apiKey();
+    if (apiKey() && method !== 'GET') headers['X-API-Key'] = apiKey();
     if (method === 'POST') headers['X-Idempotency-Key'] = crypto.randomUUID();
     const res = await fetch(BASE + path, { method, headers, body: body ? JSON.stringify(body) : undefined });
     if (!res.ok) {
+      if (res.status === 429) {
+        const retryAfter = res.headers.get('Retry-After') || '30';
+        throw new Error(`Limite de requisições excedido. Aguarde ${retryAfter} segundo(s) antes de tentar novamente.`);
+      }
       const err = await res.json().catch(() => ({}));
       throw new Error(err.mensagem || err.message || err.erro || `Erro ${res.status}`);
     }

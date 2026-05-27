@@ -88,7 +88,7 @@ public class GerenteController {
     }
 
     @Operation(summary = "Deleta registro")
-    @ApiResponses({ @ApiResponse(responseCode = "204", description = "Removido"), @ApiResponse(responseCode = "401", description = "X-API-Key inválida"), @ApiResponse(responseCode = "404", description = "Não encontrado"), @ApiResponse(responseCode = "429", description = "Rate limit excedido") })
+    @ApiResponses({ @ApiResponse(responseCode = "204", description = "Removido"), @ApiResponse(responseCode = "401", description = "X-API-Key inválida"), @ApiResponse(responseCode = "404", description = "Não encontrado"), @ApiResponse(responseCode = "409", description = "Conflito de dependência: recurso possui entidades associadas"), @ApiResponse(responseCode = "429", description = "Rate limit excedido"), @ApiResponse(responseCode = "500", description = "Erro interno inesperado") })
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deletar(@RequestHeader("X-API-Key") String apiKey, @PathVariable Long id) {
         if (!repository.existsById(id)) return ResponseEntity.notFound().build();

@@ -48,10 +48,10 @@ import org.springframework.context.annotation.Configuration;
 
                         | Operação | Limite |
                         |---|---|
-                        | GET | 10 requisições por minuto por IP |
-                        | POST / PUT / DELETE | 5 requisições por minuto por IP |
+                        | GET | 10 requisições / 30 segundos por IP |
+                        | POST / PUT / DELETE | 5 requisições / 30 segundos por IP |
 
-                        Ao exceder: **429 Too Many Requests** com header `Retry-After`.
+                        Ao exceder: **429 Too Many Requests** com header `Retry-After` indicando os segundos restantes.
 
                         ---
 
@@ -85,17 +85,20 @@ import org.springframework.context.annotation.Configuration;
 
                         ## Tratamento de Erros
 
-                        Erros seguem o contrato `ApiErrorResponse` com `timestamp`, `status`, `erro`, `mensagem`, `caminho`, `metodo` e `detalhes`.
+                        Todos os erros seguem o contrato `ApiErrorResponse` com os campos:
+                        `timestamp`, `status`, `erro`, `mensagem`, `caminho`, `metodo` e `detalhes`.
 
-                        | Código | Significado |
-                        |---|---|
-                        | 400 | Dados inválidos ou versão inválida |
-                        | 401 | X-API-Key ausente ou inválida |
-                        | 403 | Permissão insuficiente (USER tentando revogar chaves) |
-                        | 404 | Recurso não encontrado |
-                        | 409 | Idempotency-Key reutilizada com payload diferente |
-                        | 429 | Limite de requisições excedido |
-                        | 500 | Erro interno do servidor |
+                        | Código | Método(s) | Significado |
+                        |---|---|---|
+                        | 400 | Qualquer | Dados inválidos no body, parâmetro ou header `X-API-Version` inválido |
+                        | 401 | POST / PUT / DELETE | `X-API-Key` ausente ou inválida |
+                        | 403 | DELETE `/apikeys/{id}` | Permissão insuficiente (role USER tentando revogar chaves alheias) |
+                        | 404 | GET / PUT / DELETE `/{id}` | Recurso não encontrado com o ID informado |
+                        | 405 | Qualquer | Método HTTP não suportado neste endpoint |
+                        | 409 | POST | `X-Idempotency-Key` reutilizada com payload diferente |
+                        | 409 | DELETE | Recurso possui dependências — remova registros relacionados primeiro |
+                        | 429 | Qualquer | Limite de requisições excedido — consulte header `Retry-After` |
+                        | 500 | Qualquer | Erro inesperado no servidor — detalhes registrados nos logs |
 
                         ---
 
