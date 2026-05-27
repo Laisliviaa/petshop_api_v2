@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PetShop API 🐾</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --purple:       #7c3aed;
+      --purple-dark:  #5b21b6;
+      --purple-light: #a78bfa;
+      --purple-pale:  #ede9fe;
+      --black:        #0d0d0f;
+      --dark:         #13111a;
+      --dark2:        #1c1829;
+      --dark3:        #241f35;
+      --white:        #ffffff;
+      --text:         #e8e3f5;
+      --muted:        #7c6fa0;
+      --border:       rgba(124,58,237,.18);
+      --shadow:       0 4px 32px rgba(124,58,237,.15);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--black);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: -1;
+      background:
+        radial-gradient(ellipse 55% 40% at 90% 5%, rgba(124,58,237,.14) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 50% at 5% 95%, rgba(124,58,237,.08) 0%, transparent 70%),
+        var(--black);
+    }
+
+    /* ── HEADER ── */
+    header {
+      padding: 1.1rem 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      background: rgba(13,13,15,.85);
+      backdrop-filter: blur(12px);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .logo { display: flex; align-items: center; gap: .85rem; }
+    .logo-icon {
+      width: 2.4rem; height: 2.4rem;
+      background: var(--purple); border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+    }
+    .logo h1 { font-size: 1.4rem; font-weight: 800; color: var(--white); line-height: 1; }
+    .logo span { font-size: .72rem; color: var(--muted); font-weight: 300; display: block; }
+
+    nav { display: flex; gap: .35rem; flex-wrap: wrap; }
+    nav button {
+      background: none; border: 1px solid var(--border);
+      border-radius: 8px; padding: .42rem .95rem;
+      font-family: 'Nunito', sans-serif; font-size: .82rem; font-weight: 600;
+      color: var(--muted); cursor: pointer; transition: all .2s;
+    }
+    nav button:hover { border-color: var(--purple); color: var(--purple-light); }
+    nav button.active { background: var(--purple); border-color: var(--purple); color: #fff; }
+
+    /* ── MAIN ── */
+    main { max-width: 1260px; margin: 0 auto; padding: 2.5rem 1.5rem 5rem; }
+
+    /* ── API KEY BAR ── */
+    .apikey-panel {
+      background: var(--dark2); border: 1px solid var(--border);
+      border-radius: 12px; padding: .95rem 1.3rem;
+      margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+    }
+    .apikey-panel label { font-size: .8rem; font-weight: 700; color: var(--muted); white-space: nowrap; }
+    .apikey-panel input {
+      flex: 1; min-width: 180px; padding: .48rem .95rem;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-family: monospace; font-size: .82rem; color: var(--text);
+      background: var(--dark3); outline: none; transition: border-color .2s;
+    }
+    .apikey-panel input:focus { border-color: var(--purple); }
+
+    /* ── SECTION HEADER ── */
+    .section-header {
+      display: flex; align-items: flex-end; justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+    .section-title { font-size: 1.9rem; font-weight: 800; color: var(--white); }
+    .section-title em { color: var(--purple-light); font-style: normal; }
+
+    /* ── SEARCH ── */
+    .search-bar { display: flex; gap: .5rem; margin-bottom: 2rem; }
+    .search-bar input {
+      flex: 1; padding: .65rem 1.1rem;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-family: 'Nunito', sans-serif; font-size: .9rem;
+      background: var(--dark2); color: var(--text); outline: none;
+      transition: border-color .2s;
+    }
+    .search-bar input:focus { border-color: var(--purple); }
+    .search-bar input::placeholder { color: var(--muted); }
+
+    .btn-purple {
+      background: var(--purple); color: #fff;
+      border: none; border-radius: 8px; padding: .65rem 1.3rem;
+      font-family: 'Nunito', sans-serif; font-size: .9rem; font-weight: 700;
+      cursor: pointer; transition: background .2s, transform .1s; white-space: nowrap;
+    }
+    .btn-purple:hover { background: var(--purple-dark); }
+    .btn-purple:active { transform: scale(.97); }
+    .btn-outline {
+      background: none; color: var(--purple-light);
+      border: 1px solid var(--purple); border-radius: 8px; padding: .63rem 1.1rem;
+      font-family: 'Nunito', sans-serif; font-size: .9rem; font-weight: 600;
+      cursor: pointer; transition: all .2s; white-space: nowrap;
+    }
+    .btn-outline:hover { background: var(--purple); color: #fff; }
+
+    /* ── CARDS ── */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 1.2rem;
+    }
+    .card {
+      background: var(--dark2); border: 1px solid var(--border);
+      border-radius: 14px; padding: 1.4rem;
+      transition: transform .2s, border-color .2s, box-shadow .2s;
+      animation: fadeUp .35s ease both; position: relative; overflow: hidden;
+    }
+    .card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--purple), var(--purple-light));
+    }
+    .card:hover { transform: translateY(-4px); border-color: rgba(124,58,237,.4); box-shadow: var(--shadow); }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-id { font-size: .7rem; font-weight: 700; letter-spacing: .08em; color: var(--purple-light); text-transform: uppercase; margin-bottom: .35rem; }
+    .card-name { font-size: 1.2rem; font-weight: 800; margin-bottom: .2rem; color: var(--white); }
+    .card-sub { font-size: .82rem; color: var(--muted); margin-bottom: .85rem; }
+    .card-tags { display: flex; flex-wrap: wrap; gap: .35rem; margin-bottom: .85rem; }
+    .tag {
+      background: rgba(124,58,237,.12); color: var(--purple-light);
+      border: 1px solid rgba(124,58,237,.2);
+      border-radius: 6px; padding: .18rem .65rem; font-size: .72rem; font-weight: 700;
+    }
+    .tag.green  { background: rgba(26,122,80,.15); color: #4ade80; border-color: rgba(26,122,80,.25); }
+    .tag.yellow { background: rgba(160,112,0,.15);  color: #fbbf24; border-color: rgba(160,112,0,.25); }
+    .tag.blue   { background: rgba(36,72,184,.15);  color: #7da4ff; border-color: rgba(36,72,184,.25); }
+    .tag.red    { background: rgba(192,57,43,.15);   color: #f87171; border-color: rgba(192,57,43,.25); }
+
+    .card-meta { font-size: .78rem; color: var(--muted); }
+    .card-actions { display: flex; gap: .5rem; margin-top: 1.1rem; }
+    .btn-sm {
+      flex: 1; padding: .42rem .7rem; border-radius: 7px;
+      font-size: .78rem; font-weight: 700; font-family: 'Nunito', sans-serif;
+      cursor: pointer; transition: all .15s; border: none;
+    }
+    .btn-sm.edit { background: rgba(124,58,237,.12); color: var(--purple-light); border: 1px solid rgba(124,58,237,.2); }
+    .btn-sm.edit:hover { background: var(--purple); color: #fff; border-color: var(--purple); }
+    .btn-sm.del  { background: rgba(255,255,255,.04); color: var(--muted); border: 1px solid var(--border); }
+    .btn-sm.del:hover { background: #c0392b; color: #fff; border-color: #c0392b; }
+
+    /* ── STATE ── */
+    .state-msg { text-align: center; padding: 4rem 1rem; color: var(--muted); }
+    .state-msg .icon { font-size: 2.8rem; margin-bottom: .8rem; }
+    .state-msg p { font-size: .95rem; }
+
+    /* ── PAGINATION ── */
+    .pagination { display: flex; justify-content: center; gap: .4rem; margin-top: 2.5rem; flex-wrap: wrap; }
+    .pagination button {
+      background: var(--dark2); border: 1px solid var(--border);
+      border-radius: 8px; padding: .4rem .88rem;
+      font-family: 'Nunito', sans-serif; font-size: .84rem; font-weight: 600;
+      color: var(--muted); cursor: pointer; transition: all .2s;
+    }
+    .pagination button:hover:not(:disabled) { border-color: var(--purple); color: var(--purple-light); }
+    .pagination button.current { background: var(--purple); border-color: var(--purple); color: #fff; }
+    .pagination button:disabled { opacity: .35; cursor: default; }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,.65); backdrop-filter: blur(5px);
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--dark2); border: 1px solid var(--border);
+      border-radius: 18px; padding: 2rem; width: min(500px, 94vw);
+      box-shadow: 0 24px 80px rgba(124,58,237,.2);
+      animation: modalIn .22s ease; position: relative; max-height: 90vh; overflow-y: auto;
+    }
+    @keyframes modalIn { from { opacity:0; transform: scale(.95) translateY(10px); } to { opacity:1; transform:none; } }
+    .modal-title { font-size: 1.4rem; font-weight: 800; color: var(--purple-light); margin-bottom: 1.3rem; }
+    .modal-close {
+      position: absolute; top: 1.1rem; right: 1.1rem;
+      background: var(--dark3); border: 1px solid var(--border); border-radius: 8px;
+      width: 2rem; height: 2rem; display: flex; align-items: center; justify-content: center;
+      font-size: .9rem; cursor: pointer; color: var(--muted); transition: all .2s;
+    }
+    .modal-close:hover { background: var(--purple); color: #fff; border-color: var(--purple); }
+
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-size: .8rem; font-weight: 700; color: var(--muted); margin-bottom: .4rem; }
+    .form-group input, .form-group select {
+      width: 100%; padding: .62rem .9rem;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-family: 'Nunito', sans-serif; font-size: .9rem; color: var(--text);
+      background: var(--dark3); outline: none; transition: border-color .2s;
+    }
+    .form-group input:focus, .form-group select:focus { border-color: var(--purple); }
+    .form-group select option { background: var(--dark3); }
+    .modal-actions { display: flex; gap: .6rem; margin-top: 1.3rem; }
+
+    /* ── AUTH ── */
+    .auth-grid { display: flex; gap: 1.4rem; flex-wrap: wrap; align-items: flex-start; }
+    .auth-card {
+      flex: 1; min-width: 280px;
+      background: var(--dark2); border: 1px solid var(--border);
+      border-radius: 16px; padding: 1.8rem; position: relative; overflow: hidden;
+    }
+    .auth-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--purple), var(--purple-light));
+    }
+    .auth-card-title { font-size: 1.25rem; font-weight: 800; color: var(--white); margin-bottom: .35rem; }
+    .auth-card-desc { font-size: .84rem; color: var(--muted); line-height: 1.5; margin-bottom: 1.2rem; }
+
+    .key-result-label { font-size: .76rem; font-weight: 700; color: var(--muted); margin-bottom: .4rem; margin-top: 1rem; }
+    .key-result-box {
+      display: flex; align-items: center; gap: .5rem;
+      background: var(--dark3); border: 1px solid var(--border); border-radius: 8px; padding: .55rem .9rem;
+    }
+    .key-result-box code { flex: 1; font-size: .76rem; color: var(--purple-light); word-break: break-all; font-family: monospace; }
+    .btn-copy { background: none; border: none; cursor: pointer; font-size: 1rem; padding: .2rem; color: var(--muted); border-radius: 5px; transition: background .15s; }
+    .btn-copy:hover { background: var(--dark3); color: var(--text); }
+
+    .keys-table { width: 100%; border-collapse: collapse; font-size: .83rem; }
+    .keys-table th { text-align: left; padding: .6rem .75rem; font-weight: 700; color: var(--muted); font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--border); }
+    .keys-table td { padding: .7rem .75rem; border-bottom: 1px solid rgba(255,255,255,.04); vertical-align: middle; }
+    .keys-table tr:last-child td { border-bottom: none; }
+    .keys-table tr:hover td { background: rgba(255,255,255,.02); }
+
+    .badge { display: inline-block; border-radius: 6px; padding: .17rem .65rem; font-size: .7rem; font-weight: 700; }
+    .badge.ativo   { background: rgba(26,122,80,.2);  color: #4ade80; }
+    .badge.inativo { background: rgba(192,57,43,.2);   color: #f87171; }
+    .badge.ADMIN   { background: rgba(124,58,237,.2);  color: var(--purple-light); }
+    .badge.USER    { background: rgba(36,72,184,.2);   color: #7da4ff; }
+    .key-mono { font-family: monospace; font-size: .75rem; color: var(--muted); }
+
+    .btn-revoke { background: rgba(192,57,43,.15); color: #f87171; border: none; border-radius: 6px; padding: .28rem .8rem; font-size: .73rem; font-weight: 700; cursor: pointer; transition: all .15s; font-family: 'Nunito', sans-serif; }
+    .btn-revoke:hover { background: #c0392b; color: #fff; }
+    .btn-usar { background: rgba(124,58,237,.12); color: var(--purple-light); border: none; border-radius: 6px; padding: .28rem .8rem; font-size: .73rem; font-weight: 700; cursor: pointer; transition: all .15s; font-family: 'Nunito', sans-serif; }
+    .btn-usar:hover { background: var(--purple); color: #fff; }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed; bottom: 2rem; right: 2rem; z-index: 500;
+      background: var(--dark2); color: var(--text); border: 1px solid var(--border);
+      border-radius: 10px; padding: .8rem 1.3rem; font-size: .86rem; font-weight: 700;
+      box-shadow: 0 8px 24px rgba(0,0,0,.35);
+      transition: opacity .3s, transform .3s;
+      opacity: 0; transform: translateY(10px); pointer-events: none;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+    #toast.success { background: #14532d; border-color: #16a34a; color: #bbf7d0; }
+    #toast.error   { background: #450a0a; border-color: #b91c1c; color: #fca5a5; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🐾</div>
+    <div>
+      <h1>PetShop API</h1>
+      <span>Explorer v2.0</span>
+    </div>
+  </div>
+  <nav>
+    <button class="active" onclick="goTo('clientes')">👤 Clientes</button>
+    <button onclick="goTo('pets')">🐶 Pets</button>
+    <button onclick="goTo('agendamentos')">📅 Agendamentos</button>
+    <button onclick="goTo('servicos')">✂️ Serviços</button>
+    <button onclick="goTo('unidades')">🏥 Unidades</button>
+    <button onclick="goTo('gerentes')">👔 Gerentes</button>
+    <button onclick="goTo('auth')">🔑 Auth</button>
+  </nav>
+</header>
+
+<main>
+  <!-- API Key bar -->
+  <div class="apikey-panel" id="apikeyBar">
+    <label>🔑 X-API-Key ativa</label>
+    <input id="apiKeyInput" type="text" placeholder="Vá em Auth para gerar ou usar uma chave…" readonly />
+    <button class="btn-outline" onclick="goTo('auth')">Gerenciar →</button>
+  </div>
+
+  <!-- Auth Section -->
+  <div id="authSection" style="display:none">
+    <div class="section-header" style="margin-bottom:1.8rem">
+      <div class="section-title">Gerenciar <em>Auth</em></div>
+    </div>
+    <div class="auth-grid">
+      <div class="auth-card">
+        <div style="font-size:1.8rem;margin-bottom:.5rem">🗝️</div>
+        <h3 class="auth-card-title">Gerar nova chave</h3>
+        <p class="auth-card-desc">Crie uma API Key para autenticar requisições de escrita (POST, PUT, DELETE).</p>
+        <div class="form-group">
+          <label>Responsável *</label>
+          <input id="reg_owner" type="text" placeholder="Ex: Lais" />
+        </div>
+        <div class="form-group">
+          <label>Role</label>
+          <select id="reg_role">
+            <option value="USER">USER — acesso padrão</option>
+            <option value="ADMIN">ADMIN — pode revogar chaves</option>
+          </select>
+        </div>
+        <button class="btn-purple" style="width:100%" onclick="registrar()">Gerar chave 🗝️</button>
+        <div id="reg_result" style="display:none">
+          <div class="key-result-label">Sua chave (copie agora!):</div>
+          <div class="key-result-box">
+            <code id="reg_keyValue"></code>
+            <button class="btn-copy" onclick="copiarChave()" title="Copiar">📋</button>
+          </div>
+          <button class="btn-outline" style="width:100%;margin-top:.8rem" onclick="usarChave()">Usar esta chave agora</button>
+        </div>
+      </div>
+
+      <div class="auth-card" style="flex:2">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem">
+          <div>
+            <span style="font-size:1.4rem">🛡️</span>
+            <span class="auth-card-title" style="margin-left:.5rem">Chaves cadastradas</span>
+          </div>
+          <button class="btn-outline" onclick="carregarChaves()" style="font-size:.78rem;padding:.38rem .9rem">↻ Atualizar</button>
+        </div>
+        <div id="keysTable">
+          <div class="state-msg"><div class="icon">🔑</div><p>Clique em Atualizar para carregar.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Normal sections -->
+  <div id="normalSection">
+    <div class="section-header">
+      <h2 class="section-title" id="sectionTitle"><em>Clientes</em></h2>
+      <button class="btn-purple" onclick="abrirModal()">+ Novo</button>
+    </div>
+    <div class="search-bar">
+      <input id="searchInput" type="text" placeholder="Buscar…" />
+      <button class="btn-purple" onclick="buscar()">Buscar</button>
+      <button class="btn-outline" onclick="resetBusca()">Limpar</button>
+    </div>
+    <div id="content">
+      <div class="state-msg"><div class="icon">🐾</div><p>Carregando…</p></div>
+    </div>
+    <div class="pagination" id="pagination"></div>
+  </div>
+</main>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <button class="modal-close" onclick="fecharModal()">✕</button>
+    <div class="modal-title" id="modalTitle">Novo registro</div>
+    <div id="modalForm"></div>
+    <div class="modal-actions">
+      <button class="btn-purple" onclick="salvar()" style="flex:1">Salvar</button>
+      <button class="btn-outline" onclick="fecharModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  const BASE = window.location.origin;
+  let currentSection = 'clientes';
+  let currentPage    = 0;
+  let totalPages     = 1;
+  let editingId      = null;
+  let searchTerm     = '';
+
+  const sectionConfig = {
+    clientes:     { title: '<em>Clientes</em>',     path: '/api/v1/clientes',     fields: clienteFields,     body: clienteBody,     render: renderCliente },
+    pets:         { title: '<em>Pets</em>',          path: '/api/v1/pets',          fields: petFields,         body: petBody,         render: renderPet },
+    agendamentos: { title: '<em>Agendamentos</em>',  path: '/api/v1/agendamentos',  fields: agendamentoFields, body: agendamentoBody, render: renderAgendamento },
+    servicos:     { title: '<em>Serviços</em>',      path: '/api/v1/servicos',      fields: servicoFields,     body: servicoBody,     render: renderServico },
+    unidades:     { title: '<em>Unidades</em>',      path: '/api/v1/unidades',      fields: unidadeFields,     body: unidadeBody,     render: renderUnidade },
+    gerentes:     { title: '<em>Gerentes</em>',      path: '/api/v1/gerentes',      fields: gerenteFields,     body: gerenteBody,     render: renderGerente },
+  };
+
+  const sections = ['clientes','pets','agendamentos','servicos','unidades','gerentes','auth'];
+
+  function apiKey() { return document.getElementById('apiKeyInput').value.trim(); }
+
+  async function req(path, method='GET', body=null) {
+    const headers = { 'Content-Type': 'application/json', 'X-API-Version': '1' };
+    if (apiKey()) headers['X-API-Key'] = apiKey();
+    if (method === 'POST') headers['X-Idempotency-Key'] = crypto.randomUUID();
+    const res = await fetch(BASE + path, { method, headers, body: body ? JSON.stringify(body) : undefined });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.mensagem || err.message || err.erro || `Erro ${res.status}`);
+    }
+    if (res.status === 204) return null;
+    return res.json();
+  }
+
+  function goTo(section) {
+    currentSection = section; currentPage = 0; searchTerm = '';
+    document.getElementById('searchInput') && (document.getElementById('searchInput').value = '');
+    document.querySelectorAll('nav button').forEach((b,i) => b.classList.toggle('active', sections[i] === section));
+    const isAuth = section === 'auth';
+    document.getElementById('authSection').style.display   = isAuth ? 'block' : 'none';
+    document.getElementById('apikeyBar').style.display     = isAuth ? 'none'  : 'flex';
+    document.getElementById('normalSection').style.display = isAuth ? 'none'  : 'block';
+    if (isAuth) { carregarChaves(); return; }
+    document.getElementById('sectionTitle').innerHTML = sectionConfig[section].title;
+    loadData();
+  }
+
+  async function loadData() {
+    const cfg = sectionConfig[currentSection];
+    const content = document.getElementById('content');
+    content.innerHTML = '<div class="state-msg"><div class="icon">🐾</div><p>Carregando…</p></div>';
+    try {
+      const path = cfg.path + `?page=${currentPage}&size=9&sort=id,asc`;
+      const data = await req(path);
+      const items = data?._embedded ? Object.values(data._embedded)[0]
+                  : (Array.isArray(data.content) ? data.content : (Array.isArray(data) ? data : []));
+      totalPages = data?.page?.totalPages ?? 1;
+      if (!items || !items.length) {
+        content.innerHTML = '<div class="state-msg"><div class="icon">🔍</div><p>Nenhum resultado encontrado.</p></div>';
+        document.getElementById('pagination').innerHTML = '';
+        return;
+      }
+      content.innerHTML = `<div class="cards-grid">${items.map(cfg.render).join('')}</div>`;
+      renderPagination();
+    } catch(e) {
+      content.innerHTML = `<div class="state-msg"><div class="icon">❌</div><p>${e.message}</p></div>`;
+    }
+  }
+
+  function renderPagination() {
+    const el = document.getElementById('pagination');
+    if (totalPages <= 1) { el.innerHTML = ''; return; }
+    let html = `<button ${currentPage===0?'disabled':''} onclick="changePage(${currentPage-1})">← Anterior</button>`;
+    for (let i=0; i<totalPages; i++) {
+      if (i<2 || i>=totalPages-2 || Math.abs(i-currentPage)<=1)
+        html += `<button class="${i===currentPage?'current':''}" onclick="changePage(${i})">${i+1}</button>`;
+      else if (i===2||i===totalPages-3) html += `<button disabled>…</button>`;
+    }
+    html += `<button ${currentPage>=totalPages-1?'disabled':''} onclick="changePage(${currentPage+1})">Próxima →</button>`;
+    el.innerHTML = html;
+  }
+  function changePage(p) { currentPage = p; loadData(); }
+
+  function buscar() { searchTerm = document.getElementById('searchInput').value.trim(); currentPage = 0; loadData(); }
+  function resetBusca() { searchTerm = ''; document.getElementById('searchInput').value = ''; currentPage = 0; loadData(); }
+  document.getElementById('searchInput').addEventListener('keydown', e => { if(e.key==='Enter') buscar(); });
+
+  // ── AUTH ──
+  async function registrar() {
+    const owner = document.getElementById('reg_owner').value.trim();
+    const role  = document.getElementById('reg_role').value;
+    if (!owner) { toast('Informe o nome do responsável!', 'error'); return; }
+    try {
+      const data = await req('/api/v1/apikeys', 'POST', { clientName: owner, role });
+      document.getElementById('reg_keyValue').textContent = data.apiKey || data.keyValue || '';
+      document.getElementById('reg_result').style.display = 'block';
+      toast('Chave gerada com sucesso! 🗝️', 'success');
+      carregarChaves();
+    } catch(e) { toast(e.message, 'error'); }
+  }
+
+  function copiarChave() {
+    navigator.clipboard.writeText(document.getElementById('reg_keyValue').textContent)
+      .then(() => toast('Chave copiada! 📋', 'success'));
+  }
+
+  function usarChave() {
+    document.getElementById('apiKeyInput').value = document.getElementById('reg_keyValue').textContent;
+    toast('Chave definida como ativa! 🐾', 'success');
+    goTo('clientes');
+  }
+
+  async function carregarChaves() {
+    const el = document.getElementById('keysTable');
+    el.innerHTML = '<div class="state-msg"><div class="icon">🐾</div><p>Carregando…</p></div>';
+    try {
+      const keys = await req('/api/v1/apikeys');
+      if (!keys.length) { el.innerHTML = '<div class="state-msg"><div class="icon">🔑</div><p>Nenhuma chave cadastrada.</p></div>'; return; }
+      el.innerHTML = `<table class="keys-table">
+        <thead><tr><th>#</th><th>Responsável</th><th>Chave</th><th>Role</th><th>Status</th><th>Criada</th><th>Ações</th></tr></thead>
+        <tbody>${keys.map(k => `<tr>
+          <td>${k.id}</td>
+          <td><strong>${k.clientName}</strong></td>
+          <td><span class="key-mono">${(k.apiKey||k.keyValue||'').substring(0,20)}…</span></td>
+          <td><span class="badge ${k.role}">${k.role}</span></td>
+          <td><span class="badge ${k.active?'ativo':'inativo'}">${k.active?'Ativa':'Revogada'}</span></td>
+          <td>${k.createdAt ? new Date(k.createdAt).toLocaleDateString('pt-BR') : '—'}</td>
+          <td style="display:flex;gap:.4rem;flex-wrap:wrap">
+            ${k.active ? `<button class="btn-usar" onclick="aplicarChave('${k.apiKey||k.keyValue||''}')">Usar</button>
+            <button class="btn-revoke" onclick="revogarChave(${k.id})">Revogar</button>`
+            : '<span style="color:var(--muted);font-size:.75rem">—</span>'}
+          </td>
+        </tr>`).join('')}</tbody></table>`;
+    } catch(e) { el.innerHTML = `<div class="state-msg"><div class="icon">❌</div><p>${e.message}</p></div>`; }
+  }
+
+  function aplicarChave(key) { document.getElementById('apiKeyInput').value = key; toast('Chave ativa definida! 🐾', 'success'); }
+
+  async function revogarChave(id) {
+    if (!confirm('Revogar esta chave? Ela não poderá mais ser usada.')) return;
+    try { await req('/api/v1/apikeys/' + id, 'DELETE'); toast('Chave revogada!', 'success'); carregarChaves(); }
+    catch(e) { toast(e.message, 'error'); }
+  }
+
+  // ── RENDER CARDS ──
+  function renderCliente(c) {
+    const pets = c.pets ? c.pets.length : 0;
+    return `<div class="card">
+      <div class="card-id">#${c.id} · Cliente</div>
+      <div class="card-name">${c.nome}</div>
+      <div class="card-sub">📄 CPF: ${c.cpf || '—'}</div>
+      <div class="card-tags"><span class="tag blue">🐾 ${pets} pet(s)</span></div>
+      <div class="card-actions">
+        <button class="btn-sm edit" onclick="abrirModal(${c.id})">Editar</button>
+        <button class="btn-sm del"  onclick="deletar(${c.id})">Deletar</button>
+      </div>
+    </div>`;
+  }
+
+  function renderPet(p) {
+    return `<div class="card">
+      <div class="card-id">#${p.id} · Pet</div>
+      <div class="card-name">${p.nome}</div>
+      <div class="card-sub">${p.especie || '—'}</div>
+      <div class="card-tags">
+        ${p.especie === 'Cachorro' ? '<span class="tag yellow">🐕 Cachorro</span>' : p.especie === 'Gato' ? '<span class="tag blue">🐱 Gato</span>' : `<span class="tag">${p.especie||'—'}</span>`}
+        ${p.servicos ? `<span class="tag green">✂️ ${p.servicos.length} serviço(s)</span>` : ''}
+      </div>
+      <div class="card-meta">${p.cliente ? '👤 ' + p.cliente.nome : ''}</div>
+      <div class="card-actions">
+        <button class="btn-sm edit" onclick="abrirModal(${p.id})">Editar</button>
+        <button class="btn-sm del"  onclick="deletar(${p.id})">Deletar</button>
+      </div>
+    </div>`;
+  }
+
+  function renderAgendamento(a) {
+    const data = a.dataHora ? new Date(a.dataHora).toLocaleString('pt-BR') : '—';
+    const statusColor = { PENDENTE: 'yellow', CONCLUIDO: 'green', CANCELADO: 'red' };
+    return `<div class="card">
+      <div class="card-id">#${a.id} · Agendamento</div>
+      <div class="card-name">${a.pet ? a.pet.nome : 'Pet #?'}</div>
+      <div class="card-sub">📅 ${data}</div>
+      <div class="card-tags"><span class="tag ${statusColor[a.status]||''}">${a.status || '—'}</span></div>
+      <div class="card-actions">
+        <button class="btn-sm edit" onclick="abrirModal(${a.id})">Editar</button>
+        <button class="btn-sm del"  onclick="deletar(${a.id})">Deletar</button>
+      </div>
+    </div>`;
+  }
+
+  function renderServico(s) {
+    return `<div class="card">
+      <div class="card-id">#${s.id} · Serviço</div>
+      <div class="card-name">${s.descricao}</div>
+      <div class="card-sub"></div>
+      <div class="card-tags"><span class="tag green">R$ ${Number(s.preco||0).toFixed(2)}</span></div>
+      <div class="card-actions">
+        <button class="btn-sm edit" onclick="abrirModal(${s.id})">Editar</button>
+        <button class="btn-sm del"  onclick="deletar(${s.id})">Deletar</button>
+      </div>
+    </div>`;
+  }
+
+  function renderUnidade(u) {
+    return `<div class="card">
+      <div class="card-id">#${u.id} · Unidade</div>
+      <div class="card-name">${u.nome}</div>
+      <div class="card-sub">📍 ${u.endereco || '—'}</div>
+      <div class="card-tags"></div>
+      <div class="card-actions">
+        <button class="btn-sm edit" onclick="abrirModal(${u.id})">Editar</button>
+        <button class="btn-sm del"  onclick="deletar(${u.id})">Deletar</button>
+      </div>
+    </div>`;
+  }
+
+  function renderGerente(g) {
+    return `<div class="card">
+      <div class="card-id">#${g.id} · Gerente</div>
+      <div class="card-name">${g.nome}</div>
+      <div class="card-sub">${g.unidade ? '🏥 ' + g.unidade.nome : '—'}</div>
+      <div class="card-tags"></div>
+      <div class="card-actions">
+        <button class="btn-sm edit" onclick="abrirModal(${g.id})">Editar</button>
+        <button class="btn-sm del"  onclick="deletar(${g.id})">Deletar</button>
+      </div>
+    </div>`;
+  }
+
+  // ── FORM FIELDS ──
+  function clienteFields(d={}) { return `
+    <div class="form-group"><label>Nome *</label><input id="f_nome" value="${d.nome||''}" placeholder="Carlos Lima" /></div>
+    <div class="form-group"><label>CPF *</label><input id="f_cpf" value="${d.cpf||''}" placeholder="111.222.333-44" /></div>
+  `;}
+  function clienteBody() { return { nome: v('f_nome'), cpf: v('f_cpf') }; }
+
+  function petFields(d={}) { return `
+    <div class="form-group"><label>Nome *</label><input id="f_nome" value="${d.nome||''}" placeholder="Rex" /></div>
+    <div class="form-group"><label>Espécie</label><input id="f_especie" value="${d.especie||''}" placeholder="Cachorro" /></div>
+    <div class="form-group"><label>ID do Cliente</label><input id="f_clienteId" type="number" value="${d.cliente?.id||''}" placeholder="1" /></div>
+  `;}
+  function petBody() {
+    const cId = v('f_clienteId');
+    return { nome: v('f_nome'), especie: v('f_especie'), cliente: cId ? { id: Number(cId) } : null };
+  }
+
+  function agendamentoFields(d={}) {
+    const dt = d.dataHora ? d.dataHora.substring(0,16) : '';
+    return `
+    <div class="form-group"><label>ID do Pet *</label><input id="f_petId" type="number" value="${d.pet?.id||''}" placeholder="1" /></div>
+    <div class="form-group"><label>Data e hora *</label><input id="f_dataHora" type="datetime-local" value="${dt}" /></div>
+    <div class="form-group"><label>Status</label>
+      <select id="f_status">
+        ${['PENDENTE','CONCLUIDO','CANCELADO'].map(s=>`<option ${d.status===s?'selected':''}>${s}</option>`).join('')}
+      </select>
+    </div>
+  `;}
+  function agendamentoBody() {
+    const pId = v('f_petId');
+    return { pet: pId ? { id: Number(pId) } : null, dataHora: v('f_dataHora'), status: v('f_status') };
+  }
+
+  function servicoFields(d={}) { return `
+    <div class="form-group"><label>Descrição *</label><input id="f_descricao" value="${d.descricao||''}" placeholder="Banho e Tosa" /></div>
+    <div class="form-group"><label>Preço *</label><input id="f_preco" type="number" step="0.01" value="${d.preco||''}" placeholder="80.00" /></div>
+  `;}
+  function servicoBody() { return { descricao: v('f_descricao'), preco: Number(v('f_preco')) }; }
+
+  function unidadeFields(d={}) { return `
+    <div class="form-group"><label>Nome *</label><input id="f_nome" value="${d.nome||''}" placeholder="Unidade Centro" /></div>
+    <div class="form-group"><label>Endereço</label><input id="f_endereco" value="${d.endereco||''}" placeholder="Rua das Flores, 100" /></div>
+  `;}
+  function unidadeBody() { return { nome: v('f_nome'), endereco: v('f_endereco') }; }
+
+  function gerenteFields(d={}) { return `
+    <div class="form-group"><label>Nome *</label><input id="f_nome" value="${d.nome||''}" placeholder="Maria Souza" /></div>
+    <div class="form-group"><label>ID da Unidade</label><input id="f_unidadeId" type="number" value="${d.unidade?.id||''}" placeholder="1" /></div>
+  `;}
+  function gerenteBody() {
+    const uId = v('f_unidadeId');
+    return { nome: v('f_nome'), unidade: uId ? { id: Number(uId) } : null };
+  }
+
+  function v(id) { return document.getElementById(id)?.value || ''; }
+
+  // ── MODAL ──
+  async function abrirModal(id=null) {
+    editingId = id;
+    const cfg = sectionConfig[currentSection];
+    document.getElementById('modalTitle').textContent = id ? `Editar registro` : `Novo registro`;
+    let data = {};
+    if (id) { try { data = await req(cfg.path + '/' + id); } catch(e) {} }
+    document.getElementById('modalForm').innerHTML = cfg.fields(data);
+    document.getElementById('modalOverlay').classList.add('open');
+  }
+  function fecharModal() { document.getElementById('modalOverlay').classList.remove('open'); editingId = null; }
+  document.getElementById('modalOverlay').addEventListener('click', e => { if(e.target===e.currentTarget) fecharModal(); });
+
+  async function salvar() {
+    const cfg  = sectionConfig[currentSection];
+    const body = cfg.body();
+    try {
+      if (editingId) { await req(cfg.path + '/' + editingId, 'PUT', body); toast('Atualizado com sucesso! ✅', 'success'); }
+      else           { await req(cfg.path, 'POST', body);                   toast('Criado com sucesso! 🐾', 'success'); }
+      fecharModal(); loadData();
+    } catch(e) { toast(e.message, 'error'); }
+  }
+
+  async function deletar(id) {
+    if (!confirm('Tem certeza? Essa ação não pode ser desfeita.')) return;
+    try { await req(sectionConfig[currentSection].path + '/' + id, 'DELETE'); toast('Deletado!', 'success'); loadData(); }
+    catch(e) { toast(e.message, 'error'); }
+  }
+
+  // ── TOAST ──
+  function toast(msg, type='') {
+    const el = document.getElementById('toast');
+    el.textContent = msg; el.className = `show ${type}`;
+    clearTimeout(el._t);
+    el._t = setTimeout(() => el.className = '', 3200);
+  }
+
+  // ── INIT ──
+  goTo('clientes');
+</script>
+</body>
+</html>
